@@ -1,3 +1,9 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="동네 약국 조제 게임", layout="wide")
+
+html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,6 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 효과음 생성을 위한 Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* 전체 폰트 및 손그림 외곽선/파스텔 톤 스타일 */
         body {
@@ -64,7 +72,7 @@
             border-top: 4px solid #593a27;
         }
 
-        /* 약 보관함 칸 */
+        /* 약 보관함 칸 (레퍼런스 1번 이미지의 토핑 통 스타일) */
         .med-compartment {
             background-color: #fff6e8;
             border: 3.5px solid #593a27;
@@ -105,7 +113,7 @@
             animation: none;
         }
 
-        /* 나무 약 접시 */
+        /* 나무 약 접시 (도마/쟁반 스타일) */
         .wooden-dish {
             background: radial-gradient(circle, #f3c894 60%, #dfa668 100%);
             border: 4px solid #593a27;
@@ -187,7 +195,7 @@
     <!-- 메인 게임 프레임 -->
     <div id="game-app" class="w-full max-w-4xl bg-[#fff9f0] hand-drawn-box overflow-hidden flex flex-col relative">
         
-        <!-- 1. 상단 리본 헤더 -->
+        <!-- 1. 상단 리본 헤더 (레퍼런스 이미지의 분홍 리본 배너 스타일) -->
         <header class="bg-[#e88d72] border-b-4 border-[#593a27] px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 z-20">
             <div class="flex items-center gap-2">
                 <span class="bg-[#fff6e8] text-[#593a27] font-jua px-3 py-1 rounded-full border-2 border-[#593a27] text-sm sm:text-base shadow-sm">
@@ -218,11 +226,12 @@
             </div>
         </header>
 
-        <!-- 2. 상단 카운터 뷰 (아늑한 가게 배경 + 환자 + 말풍선) -->
+        <!-- 2. 상단 카운터 뷰 (레퍼런스 2번 이미지: 아늑한 가게 배경 + 환자 + 말풍선) -->
         <section class="cozy-wallpaper relative px-4 pt-5 pb-3 sm:px-8 sm:pt-6 flex flex-col justify-between min-h-[260px] sm:min-h-[290px]">
             
-            <!-- 배경 장식 소품 (선반, 화분 등) -->
+            <!-- 배경 장식 소품 (선반, 화분, 액자 등) -->
             <div class="absolute top-3 left-6 opacity-80 hidden sm:block pointer-events-none">
+                <!-- 벽걸이 허브 리스 SVG -->
                 <svg width="58" height="58" viewBox="0 0 60 60">
                     <circle cx="30" cy="30" r="22" fill="none" stroke="#789c6a" stroke-width="8" stroke-dasharray="6 4"/>
                     <circle cx="30" cy="30" r="22" fill="none" stroke="#593a27" stroke-width="2"/>
@@ -233,6 +242,7 @@
             </div>
 
             <div class="absolute top-3 right-6 opacity-85 hidden sm:block pointer-events-none">
+                <!-- 약초 병 선반 SVG -->
                 <svg width="95" height="65" viewBox="0 0 100 70">
                     <rect x="5" y="52" width="90" height="8" rx="3" fill="#c4814b" stroke="#593a27" stroke-width="2.5"/>
                     <rect x="16" y="24" width="22" height="28" rx="5" fill="#d4e8d1" stroke="#593a27" stroke-width="2.5"/>
@@ -248,19 +258,16 @@
                 <!-- 환자 일러스트 컨테이너 -->
                 <div id="patient-container" class="flex flex-col items-center animate-enter">
                     <div id="patient-avatar" class="w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center animate-float">
-                        <!-- 자바스크립트에서 4가지 증상별 SVG 일러스트가 렌더링됩니다 -->
+                        <!-- 자바스크립트에서 사용자1, 2, 3 SVG 일러스트가 렌더링됩니다 -->
                     </div>
-                    <span id="patient-name-tag" class="mt-1 bg-[#593a27] text-[#fff6e8] font-jua text-sm sm:text-base px-4 py-0.5 rounded-full tracking-wide shadow">
-                        김씨 환자
+                    <span id="patient-name-tag" class="mt-1 bg-[#593a27] text-[#fff6e8] font-jua text-sm px-3.5 py-0.5 rounded-full tracking-wide shadow">
+                        사용자 1
                     </span>
                 </div>
 
                 <!-- 환자 대사 말풍선 -->
                 <div id="speech-box" class="speech-bubble relative bg-white hand-drawn-sm px-5 py-3.5 max-w-xs sm:max-w-sm text-center sm:text-left animate-pop">
-                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                        <span id="patient-title-badge" class="bg-[#f2e2ce] text-[#593a27] font-jua text-xs sm:text-sm px-2.5 py-0.5 rounded-full border border-[#593a27]">
-                            김씨
-                        </span>
+                    <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
                         <span id="symptom-badge" class="bg-[#ffe2d9] text-[#b84325] font-jua text-xs sm:text-sm px-2.5 py-0.5 rounded-full border border-[#593a27]">
                             증상: 배 아픔
                         </span>
@@ -269,10 +276,10 @@
                         "아이고... 배가 너무 콕콕 쑤시고 아파요!"
                     </p>
                     <!-- 현재 환자에게 필요한 약 자동 표시 메모 -->
-                    <div id="auto-rx-box" class="mt-2.5 bg-[#fff8e7] border-2 border-dashed border-[#d97706] rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <div id="auto-rx-box" class="mt-2.5 bg-[#fff8e7] border-2 border-dashed border-[#d97706] rounded-xl px-3 py-1.5 flex items-center justify-center sm:justify-start gap-2">
                         <span class="font-jua text-xs sm:text-sm text-[#92400e]">📋 필요한 약:</span>
                         <div id="required-meds-badges" class="flex items-center gap-1.5 font-jua text-sm sm:text-base">
-                            <!-- 자바스크립트에서 현재 환자의 정답 약 배지가 표시됩니다 -->
+                            <!-- 자바스크립트에서 현재 환자의 정답 약 배지(예: [ㄱ] + [ㄴ])가 표시됩니다 -->
                         </div>
                     </div>
                 </div>
@@ -293,6 +300,7 @@
             
             <!-- 왼쪽: 카운터 장식 화분 & 안내 -->
             <div class="hidden md:flex items-center gap-3">
+                <!-- 미니 화분 SVG -->
                 <svg width="56" height="64" viewBox="0 0 60 68">
                     <path d="M18 42 L42 42 L38 62 L22 62 Z" fill="#e07a5f" stroke="#593a27" stroke-width="2.5"/>
                     <rect x="15" y="37" width="30" height="6" rx="2" fill="#e88d72" stroke="#593a27" stroke-width="2.5"/>
@@ -334,7 +342,7 @@
             </div>
         </section>
 
-        <!-- 4. 하단 약 보관함 트레이 -->
+        <!-- 4. 하단 약 보관함 트레이 (레퍼런스 1번 이미지: 칸칸이 나뉜 나무 상자 속 재료들 스타일) -->
         <section class="wood-tray-area p-4 sm:p-6">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="font-jua text-base sm:text-lg text-[#fff6e8] drop-shadow-[0_2px_0_#593a27] flex items-center gap-2">
@@ -351,9 +359,9 @@
             </div>
         </section>
 
-        <!-- 5. 처방전 도감 모달 (4가지 증상 규칙 모두 표시) -->
+        <!-- 5. 처방전 도감 모달 (언제든 규칙을 확인할 수 있는 팝업) -->
         <div id="recipe-modal" class="hidden fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
-            <div class="bg-[#fff9f0] hand-drawn-box w-full max-w-md p-5 sm:p-6 relative animate-pop max-h-[90vh] overflow-y-auto">
+            <div class="bg-[#fff9f0] hand-drawn-box w-full max-w-md p-5 sm:p-6 relative animate-pop">
                 <div class="flex items-center justify-between border-b-2 border-dashed border-[#c4a484] pb-3 mb-4">
                     <h3 class="font-jua text-2xl text-[#593a27] flex items-center gap-2">
                         📖 동네 약국 처방 안내서
@@ -363,11 +371,11 @@
                     </button>
                 </div>
 
-                <div class="space-y-2.5">
-                    <!-- 증상 1: 배 아픔 -->
+                <div class="space-y-3">
+                    <!-- 사용자 1 규칙 -->
                     <div class="bg-[#fff2e2] p-3 rounded-xl border-2 border-[#593a27] flex items-center justify-between">
                         <div class="flex items-center gap-2.5">
-                            <span class="font-jua bg-[#f2b84b] text-[#4a3525] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">배 아픔</span>
+                            <span class="font-jua bg-[#f2b84b] text-[#4a3525] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">사용자 1</span>
                             <div>
                                 <p class="font-jua text-base text-[#4a3525]">배가 아플 때</p>
                                 <p class="text-xs text-[#7a5c43]">속을 달래주는 조합</p>
@@ -380,10 +388,10 @@
                         </div>
                     </div>
 
-                    <!-- 증상 2: 머리 아픔 -->
+                    <!-- 사용자 2 규칙 -->
                     <div class="bg-[#fff2e2] p-3 rounded-xl border-2 border-[#593a27] flex items-center justify-between">
                         <div class="flex items-center gap-2.5">
-                            <span class="font-jua bg-[#a8d5ba] text-[#4a3525] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">머리 아픔</span>
+                            <span class="font-jua bg-[#a8d5ba] text-[#4a3525] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">사용자 2</span>
                             <div>
                                 <p class="font-jua text-base text-[#4a3525]">머리가 아플 때</p>
                                 <p class="text-xs text-[#7a5c43]">지끈거림을 잡는 조합</p>
@@ -392,14 +400,14 @@
                         <div class="flex items-center gap-1.5 font-jua text-lg">
                             <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#10b981]">ㄷ</span>
                             <span>+</span>
-                            <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#64748b]">ㄹ</span>
+                            <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#8b5cf6]">ㄹ</span>
                         </div>
                     </div>
 
-                    <!-- 증상 3: 가슴 아픔 -->
+                    <!-- 사용자 3 규칙 -->
                     <div class="bg-[#fff2e2] p-3 rounded-xl border-2 border-[#593a27] flex items-center justify-between">
                         <div class="flex items-center gap-2.5">
-                            <span class="font-jua bg-[#f4a261] text-[#4a3525] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">가슴 아픔</span>
+                            <span class="font-jua bg-[#f4a261] text-[#4a3525] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">사용자 3</span>
                             <div>
                                 <p class="font-jua text-base text-[#4a3525]">가슴이 아플 때</p>
                                 <p class="text-xs text-[#7a5c43]">답답함을 풀어주는 조합</p>
@@ -408,23 +416,7 @@
                         <div class="flex items-center gap-1.5 font-jua text-lg">
                             <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#3b82f6]">ㄴ</span>
                             <span>+</span>
-                            <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#d97706]">ㅁ</span>
-                        </div>
-                    </div>
-
-                    <!-- 증상 4: 구토 (신규 추가) -->
-                    <div class="bg-[#f0fdf4] p-3 rounded-xl border-2 border-[#593a27] flex items-center justify-between">
-                        <div class="flex items-center gap-2.5">
-                            <span class="font-jua bg-[#86efac] text-[#14532d] px-2.5 py-1 rounded-lg border border-[#593a27] text-sm">구토</span>
-                            <div>
-                                <p class="font-jua text-base text-[#4a3525]">속이 울렁거릴 때</p>
-                                <p class="text-xs text-[#7a5c43]">메스꺼움을 가라앉히는 조합</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5 font-jua text-lg">
-                            <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#d96b43]">ㄱ</span>
-                            <span>+</span>
-                            <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#d97706]">ㅁ</span>
+                            <span class="bg-white px-3 py-1 rounded-lg border-2 border-[#593a27] text-[#ec4899]">ㅁ</span>
                         </div>
                     </div>
                 </div>
@@ -440,7 +432,7 @@
             <div class="bg-[#fff9f0] hand-drawn-box w-full max-w-md p-6 text-center animate-pop">
                 <div id="result-badge-icon" class="text-6xl mb-2">🏆</div>
                 <h2 class="font-jua text-3xl text-[#593a27] mb-1">오늘의 약국 영업 종료!</h2>
-                <p id="result-subtitle" class="text-sm text-[#7a5c43] mb-5">총 10명의 동네 주민을 모두 진료했습니다.</p>
+                <p id="result-subtitle" class="text-sm text-[#7a5c43] mb-5">총 10명의 환자분을 모두 진료했습니다.</p>
 
                 <div class="bg-[#fff2e2] hand-drawn-sm p-4 mb-5">
                     <p class="text-sm text-[#6b4f3a] mb-1">정확하게 처방한 환자 수</p>
@@ -452,9 +444,9 @@
                     </p>
                 </div>
 
-                <!-- 환자별 기록 요약 배지 (김씨 ⭕, 박씨 ❌ 등) -->
+                <!-- 환자별 기록 요약 배지 -->
                 <div id="history-summary" class="flex flex-wrap justify-center gap-1.5 mb-6">
-                    <!-- 1~10번 환자 성씨 및 O/X 결과가 표시됩니다 -->
+                    <!-- 1~10번 O/X 결과가 표시됩니다 -->
                 </div>
 
                 <button onclick="startNewGame()" class="w-full bg-[#e88d72] hover:bg-[#db7c60] active:translate-y-0.5 text-white font-jua text-xl py-3 rounded-xl border-3 border-[#593a27] shadow-[0_4px_0_#593a27] cursor-pointer transition">
@@ -467,11 +459,8 @@
 
     <script>
         // ==========================================
-        // 1. 게임 데이터 정의 (환자 성씨, 증상 유형, 5가지 약)
+        // 1. 게임 데이터 정의 (환자 유형 및 5가지 약)
         // ==========================================
-
-        // 랜덤으로 배정될 5가지 동네 주민 성씨
-        const PATIENT_SURNAMES = ['김씨', '박씨', '최씨', '임씨', '이씨'];
 
         // 5가지 약 (ㄱ, ㄴ, ㄷ, ㄹ, ㅁ) 데이터 및 커스텀 손그림풍 SVG 아이콘
         const MEDICINES = {
@@ -508,7 +497,7 @@
             'ㄷ': {
                 id: 'ㄷ',
                 name: 'ㄷ 약',
-                desc: '진정 약초잎',
+                desc: '초록 약초잎',
                 color: '#10b981',
                 svg: `
                     <svg viewBox="0 0 64 64" class="w-11 h-11 sm:w-14 sm:h-14 drop-shadow-sm">
@@ -521,13 +510,13 @@
             'ㄹ': {
                 id: 'ㄹ',
                 name: 'ㄹ 약',
-                desc: '하얀 정제약',
-                color: '#64748b',
+                desc: '보라 정제약',
+                color: '#8b5cf6',
                 svg: `
                     <svg viewBox="0 0 64 64" class="w-11 h-11 sm:w-14 sm:h-14 drop-shadow-sm">
-                        <circle cx="26" cy="36" r="14" fill="#ffffff" stroke="#593a27" stroke-width="3.5"/>
+                        <circle cx="26" cy="36" r="14" fill="#c4b5fd" stroke="#593a27" stroke-width="3.5"/>
                         <line x1="17" y1="27" x2="35" y2="45" stroke="#593a27" stroke-width="2.5"/>
-                        <circle cx="42" cy="24" r="11" fill="#f1f5f9" stroke="#593a27" stroke-width="3.5"/>
+                        <circle cx="42" cy="24" r="11" fill="#fde047" stroke="#593a27" stroke-width="3.5"/>
                         <line x1="35" y1="24" x2="49" y2="24" stroke="#593a27" stroke-width="2.5"/>
                     </svg>
                 `
@@ -535,23 +524,24 @@
             'ㅁ': {
                 id: 'ㅁ',
                 name: 'ㅁ 약',
-                desc: '황금 가루약',
-                color: '#d97706',
+                desc: '분홍 가루약',
+                color: '#ec4899',
                 svg: `
                     <svg viewBox="0 0 64 64" class="w-11 h-11 sm:w-14 sm:h-14 drop-shadow-sm">
-                        <rect x="16" y="14" width="32" height="38" rx="6" fill="#fde68a" stroke="#593a27" stroke-width="3.5"/>
+                        <rect x="16" y="14" width="32" height="38" rx="6" fill="#fbcfe8" stroke="#593a27" stroke-width="3.5"/>
                         <path d="M16 23 L48 23" stroke="#593a27" stroke-width="2.5" stroke-dasharray="4 3"/>
                         <circle cx="32" cy="37" r="7" fill="#fffdf7" stroke="#593a27" stroke-width="2.5"/>
-                        <path d="M29 37 L31 39 L35 35" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M29 37 L31 39 L35 35" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-linecap="round"/>
                     </svg>
                 `
             }
         };
 
-        // 4가지 환자 증상 유형 정의 (배 아픔, 머리 아픔, 가슴 아픔, 구토)
-        const SYMPTOM_TYPES = [
+        // 3명의 환자 유형 정의 (정해진 증상 및 정답 약 조합)
+        const PATIENT_TYPES = [
             {
-                id: 'stomach',
+                id: 'user1',
+                name: '사용자 1',
                 symptomLabel: '증상: 배 아픔 (복통)',
                 dialogue: '"아이고... 배가 너무 콕콕 쑤시고 아파요!"',
                 requiredMeds: ['ㄱ', 'ㄴ'],
@@ -583,7 +573,8 @@
                 `
             },
             {
-                id: 'head',
+                id: 'user2',
+                name: '사용자 2',
                 symptomLabel: '증상: 머리 아픔 (두통)',
                 dialogue: '"으으... 머리가 지끈지끈 울리고 어지러워요!"',
                 requiredMeds: ['ㄷ', 'ㄹ'],
@@ -612,7 +603,8 @@
                 `
             },
             {
-                id: 'chest',
+                id: 'user3',
+                name: '사용자 3',
                 symptomLabel: '증상: 가슴 아픔 (흉통)',
                 dialogue: '"콜록... 가슴이 답답하고 뻐근하게 아파요!"',
                 requiredMeds: ['ㄴ', 'ㅁ'],
@@ -639,38 +631,6 @@
                         <ellipse cx="70" cy="114" rx="13" ry="9" fill="#fae1dd" stroke="#593a27" stroke-width="3"/>
                     </svg>
                 `
-            },
-            {
-                id: 'nausea',
-                symptomLabel: '증상: 구토 (메스꺼움)',
-                dialogue: '"우욱... 속이 울렁거리고 자꾸 토할 것 같아요!"',
-                requiredMeds: ['ㄱ', 'ㅁ'],
-                // 창백한 연둣빛 안색에 입을 막고 있는 구토 환자 SVG
-                svg: `
-                    <svg viewBox="0 0 140 140" class="w-full h-full">
-                        <!-- 몸통 (하늘색 셔츠) -->
-                        <path d="M30 132 C30 96, 110 96, 110 132 Z" fill="#90cdf4" stroke="#593a27" stroke-width="3.5"/>
-                        <!-- 목 (창백한 연둣빛 피부) -->
-                        <rect x="61" y="82" width="18" height="18" rx="6" fill="#e2f0d9" stroke="#593a27" stroke-width="3"/>
-                        <!-- 얼굴 (창백한 연둣빛 안색) -->
-                        <circle cx="70" cy="56" r="32" fill="#e2f0d9" stroke="#593a27" stroke-width="3.5"/>
-                        <!-- 머리카락 (자연스러운 웨이브 갈색 머리) -->
-                        <path d="M36 58 C32 22, 108 22, 104 58 C100 42, 85 32, 70 32 C55 32, 40 42, 36 58 Z" fill="#5c4033" stroke="#593a27" stroke-width="3.5"/>
-                        <!-- 어지러운 눈 (빙글빙글/찡그린 눈) -->
-                        <path d="M49 48 L60 51 M91 48 L80 51" stroke="#593a27" stroke-width="2.5" stroke-linecap="round"/>
-                        <circle cx="55" cy="56" r="4.5" fill="none" stroke="#593a27" stroke-width="2.5"/>
-                        <circle cx="55" cy="56" r="1.5" fill="#593a27"/>
-                        <circle cx="85" cy="56" r="4.5" fill="none" stroke="#593a27" stroke-width="2.5"/>
-                        <circle cx="85" cy="56" r="1.5" fill="#593a27"/>
-                        <!-- 울렁거리는 볼 & 식은땀 -->
-                        <ellipse cx="47" cy="64" rx="5" ry="3" fill="#86efac" opacity="0.85"/>
-                        <ellipse cx="93" cy="64" rx="5" ry="3" fill="#86efac" opacity="0.85"/>
-                        <path d="M100 40 C103 45, 103 49, 100 49 C97 49, 97 45, 100 40 Z" fill="#93c5fd" stroke="#593a27" stroke-width="1.5"/>
-                        <!-- 입을 막고 있는 손 -->
-                        <ellipse cx="70" cy="74" rx="13" ry="9" fill="#e2f0d9" stroke="#593a27" stroke-width="3"/>
-                        <path d="M64 74 H76" stroke="#593a27" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                `
             }
         ];
 
@@ -678,29 +638,55 @@
         // 2. 게임 상태 변수
         // ==========================================
         const TOTAL_PATIENTS = 10;
-        let patientQueue = [];        // 랜덤으로 뽑힌 10명의 환자 리스트 (성씨 + 증상 객체)
-        let currentIndex = 0;         // 현재 환자 번호 (0 ~ 9)
-        let selectedMeds = [];        // 현재 접시에 담긴 약 목록 (최대 2개)
-        let score = 0;                // 정답 맞힌 횟수
-        let historyLog = [];          // 각 환자별 성씨 및 성공/실패 기록
-        let isProcessing = false;     // 결과 애니메이션 중 중복 클릭 방지
+        let patientQueue = [];      // 랜덤으로 뽑힌 10명의 환자 리스트
+        let currentIndex = 0;       // 현재 환자 번호 (0 ~ 9)
+        let selectedMeds = [];      // 현재 접시에 담긴 약 목록 (최대 2개)
+        let score = 0;              // 정답 맞힌 횟수
+        let historyLog = [];        // 각 환자별 성공/실패 기록
+        let isProcessing = false;   // 결과 애니메이션 중 중복 클릭 방지
         let showMedicineGuide = true; // 현재 환자의 알맞은 약 자동 표시 여부
 
         // ==========================================
-        // 3. 게임 초기화 및 화면 렌더링
+        // 3. 효과음 (Tone.js 신디사이저 - 외부 파일 없음)
+        // ==========================================
+        let synth = null;
+
+        function playSound(type) {
+            try {
+                if (!synth) {
+                    synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                    synth.volume.value = -8;
+                }
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+
+                const now = Tone.now();
+                if (type === 'pick') {
+                    synth.triggerAttackRelease('C5', '16n', now);
+                } else if (type === 'clear') {
+                    synth.triggerAttackRelease('A4', '16n', now);
+                } else if (type === 'success') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5'], '8n', now);
+                    synth.triggerAttackRelease(['C6'], '4n', now + 0.15);
+                } else if (type === 'fail') {
+                    synth.triggerAttackRelease(['E4', 'Bb3'], '4n', now);
+                }
+            } catch (e) {
+                // 오디오 컨텍스트 제한 환경에서도 게임 진행에 영향 없도록 예외 처리
+            }
+        }
+
+        // ==========================================
+        // 4. 게임 초기화 및 화면 렌더링
         // ==========================================
 
-        // 새 게임 시작: 랜덤 성씨 + 4가지 증상 중 랜덤 조합으로 10명 생성
+        // 새 게임 시작: 사용자 1, 2, 3 중에서 랜덤으로 10명 추출
         function startNewGame() {
             patientQueue = [];
             for (let i = 0; i < TOTAL_PATIENTS; i++) {
-                const randomSurname = PATIENT_SURNAMES[Math.floor(Math.random() * PATIENT_SURNAMES.length)];
-                const randomSymptom = SYMPTOM_TYPES[Math.floor(Math.random() * SYMPTOM_TYPES.length)];
-                patientQueue.push({
-                    surname: randomSurname,
-                    displayName: `${randomSurname} 환자`,
-                    ...randomSymptom
-                });
+                const randomIdx = Math.floor(Math.random() * PATIENT_TYPES.length);
+                patientQueue.push(PATIENT_TYPES[randomIdx]);
             }
 
             currentIndex = 0;
@@ -812,13 +798,12 @@
             // 등장 애니메이션 재실행
             containerEl.classList.remove('animate-enter');
             speechBox.classList.remove('animate-pop');
-            void containerEl.offsetWidth;
+            void containerEl.offsetWidth; // 리플로우 트리거
             containerEl.classList.add('animate-enter');
             speechBox.classList.add('animate-pop');
 
             avatarEl.innerHTML = patient.svg;
-            document.getElementById('patient-name-tag').textContent = patient.displayName;
-            document.getElementById('patient-title-badge').textContent = patient.surname;
+            document.getElementById('patient-name-tag').textContent = patient.name;
             document.getElementById('symptom-badge').textContent = patient.symptomLabel;
             document.getElementById('patient-dialogue').textContent = patient.dialogue;
             updateRequiredMedsBanner();
@@ -832,16 +817,17 @@
         }
 
         // ==========================================
-        // 4. 약 선택, 비우기 및 처방 판정 로직
+        // 5. 약 선택, 비우기 및 처방 판정 로직
         // ==========================================
 
         // 약통에서 약을 클릭했을 때
         function selectMedicine(medId) {
             if (isProcessing) return;
 
-            // 이미 접시에 담긴 약을 다시 누르면 접시에서 빼기
+            // 이미 접시에 담긴 약을 다시 누르면 접시에서 빼기 (편의 기능)
             if (selectedMeds.includes(medId)) {
                 selectedMeds = selectedMeds.filter(id => id !== medId);
+                playSound('clear');
                 updatePlateUI();
                 renderMedicineTrays();
                 return;
@@ -857,6 +843,7 @@
             }
 
             selectedMeds.push(medId);
+            playSound('pick');
             updatePlateUI();
             renderMedicineTrays();
         }
@@ -865,6 +852,7 @@
         function clearPlate() {
             if (isProcessing || selectedMeds.length === 0) return;
             selectedMeds = [];
+            playSound('clear');
             updatePlateUI();
             renderMedicineTrays();
         }
@@ -880,7 +868,7 @@
                 if (medId && MEDICINES[medId]) {
                     const med = MEDICINES[medId];
                     slot.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 border-[#593a27] bg-[#fffdf9] flex flex-col items-center justify-center shadow-sm animate-pop cursor-pointer';
-                    slot.onclick = () => selectMedicine(medId);
+                    slot.onclick = () => selectMedicine(medId); // 접시 위 약을 눌러도 제거 가능
                     slot.innerHTML = `
                         <div class="scale-75 sm:scale-90 -my-1">${med.svg}</div>
                         <span class="font-jua text-xs sm:text-sm text-[#593a27] leading-none">${med.id}</span>
@@ -892,6 +880,7 @@
                 }
             }
 
+            // 2개가 모두 담겼을 때만 '처방하기' 버튼 활성화
             const giveBtn = document.getElementById('give-btn');
             giveBtn.disabled = selectedMeds.length !== 2;
         }
@@ -916,20 +905,22 @@
 
             if (isCorrect) {
                 score++;
-                historyLog.push({ surname: currentPatient.surname, correct: true });
+                historyLog.push({ patient: currentPatient.name, correct: true });
+                playSound('success');
 
                 feedbackEmoji.textContent = '😊✨';
                 feedbackTitle.textContent = '처방 성공!';
                 feedbackTitle.className = 'font-jua text-2xl text-[#2e7d32] mb-1';
-                feedbackDesc.textContent = `${currentPatient.surname} 환자가 고마워하며 기운을 차렸어요!`;
+                feedbackDesc.textContent = `${currentPatient.name}님이 고마워하며 기운을 차렸어요!`;
                 feedbackCard.className = 'bg-[#f1f8e9] hand-drawn-box px-7 py-5 text-center max-w-xs mx-4 animate-pop';
             } else {
-                historyLog.push({ surname: currentPatient.surname, correct: false });
+                historyLog.push({ patient: currentPatient.name, correct: false });
+                playSound('fail');
 
                 feedbackEmoji.textContent = '💦😵';
                 feedbackTitle.textContent = '처방이 달라요!';
                 feedbackTitle.className = 'font-jua text-2xl text-[#c62828] mb-1';
-                feedbackDesc.innerHTML = `${currentPatient.surname} 환자에게는 <b>[${required[0]}, ${required[1]}]</b> 약이 필요했어요.`;
+                feedbackDesc.innerHTML = `${currentPatient.name}님에게는 <b>[${required[0]}, ${required[1]}]</b> 약이 필요했어요.`;
                 feedbackCard.className = 'bg-[#ffebee] hand-drawn-box px-7 py-5 text-center max-w-xs mx-4 animate-shake';
             }
 
@@ -972,15 +963,15 @@
                 comment.textContent = '수고하셨어요! 처방전을 참고해서 다시 도전해 볼까요?';
             }
 
-            // 1~10번 환자별 성씨 및 결과 요약 배지 생성
+            // 1~10번 환자별 결과 요약 배지 생성
             const historyContainer = document.getElementById('history-summary');
             historyContainer.innerHTML = '';
             historyLog.forEach((item, idx) => {
                 const badge = document.createElement('span');
                 badge.className = item.correct
-                    ? 'bg-[#d8f3dc] text-[#1b4332] border-2 border-[#593a27] rounded-lg px-2.5 py-1 text-xs font-jua'
-                    : 'bg-[#ffe5ec] text-[#9b2226] border-2 border-[#593a27] rounded-lg px-2.5 py-1 text-xs font-jua';
-                badge.textContent = `${idx + 1}. ${item.surname} ${item.correct ? '⭕' : '❌'}`;
+                    ? 'bg-[#d8f3dc] text-[#1b4332] border-2 border-[#593a27] rounded-lg px-2 py-1 text-xs font-jua'
+                    : 'bg-[#ffe5ec] text-[#9b2226] border-2 border-[#593a27] rounded-lg px-2 py-1 text-xs font-jua';
+                badge.textContent = `${idx + 1}번 ${item.correct ? '⭕' : '❌'}`;
                 historyContainer.appendChild(badge);
             });
 
